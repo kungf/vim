@@ -215,5 +215,17 @@ if filereadable($HOME . "/.vimrc.local")
   source ~/.vimrc.local
 endif
 
-inoremap <C-o> <CR><Esc>O
-inoremap <C-l> <Esc>lxa
+inoremap <C-o> <CR><Esc>O                                                        
+inoremap <C-l> <Esc>ls                                                                                                                                                                                             
+                                                                                     
+"跳过括号                                                                            
+"" Out of the brackets                                                               
+func SkipPair()                                                                      
+    if getline('.')[col('.') - 1] == ')' || getline('.')[col('.') - 1] == ']' || getline('.')[col('.') - 1] == '"' || getline('.')[col('.') - 1] == "'" || getline('.')[col('.') - 1] == '}' || getline('.')[col('.') - 1] == '>' 
+        return "\<ESC>la\<Space>"                                                    
+    else                                                                             
+        return "ll"·                                                                 
+    endif                                                                            
+  endfunc                                                                            
+                                                                                     
+inoremap ll <C-R>=SkipPair()<CR>  
