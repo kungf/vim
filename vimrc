@@ -216,7 +216,7 @@ if filereadable($HOME . "/.vimrc.local")
 endif
 
 inoremap <C-o> <CR><Esc>O                                                        
-inoremap <C-l> <Esc>ls                                                                                                                                                                                             
+inoremap <C-l> <Esc>ls<Space>                                                                                                                                                                                    
                                                                                      
 "跳过括号                                                                            
 "" Out of the brackets                                                               
