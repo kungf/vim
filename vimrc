@@ -1,231 +1,244 @@
-" Use Vim settings, rather then Vi settings. This setting must be as early as
-" possible, as it has side effects.
-set nocompatible
+"the default <Leader> is \
 
-" Highlight current line
-au WinLeave * set nocursorline nocursorcolumn
-au WinEnter * set cursorline cursorcolumn
-set cursorline cursorcolumn
+"paste normal to avoid paste indent too more
+set pastetoggle=<F12>
 
-" Leader
-let mapleader = ","
+"replace begin
+"https://vim.fandom.com/wiki/Search_and_replace_in_multiple_buffers
+":arg *.c All *.c files in current directory.
+":set hidden Allow switching away from a changed buffer without saving.
+":set autowriteall Or, use this for automatic saving (instead of :set hidden).
+"...Move cursor to word that is to be replaced.
+":Replace whatever Search and replace in all files in arglist; confirm each change.
+":Replace! whatever Same, but do not confirm each change.
+":wa Write all changed files (not needed if used :set autowriteall)
+" Search for current word and replace with given text for files in arglist.
+function! Replace(bang, replace)
+	let flag = 'ge'
+	if !a:bang
+		let flag .= 'c'
+	endif
+	let search = '\<' . escape(expand('<cword>'), '/\.*$^~[') . '\>'
+	let replace = escape(a:replace, '/\&~')
+	execute 'argdo %s/' . search . '/' . replace . '/' . flag
+endfunction
+command! -nargs=1 -bang Replace :call Replace(<bang>0, <q-args>)
+nnoremap <Leader>r :call Replace(1, input('Replace '.expand('<cword>').' with: '))<CR>
+"replace with interactive
+nnoremap <Leader>rc :call Replace(0, input('Replace '.expand('<cword>').' with: '))<CR>
 
-set backspace=2   " Backspace deletes like most programs in insert mode
-set nobackup
-set nowritebackup
-set noswapfile    " http://robots.thoughtbot.com/post/18739402579/global-gitignore#comment-458413287
-set history=50
-set ruler         " show the cursor position all the time
-set showcmd       " display incomplete commands
-set incsearch     " do incremental searching
-set laststatus=2  " Always display the status line
-set autowrite     " Automatically :write before running commands
-set confirm       " Need confrimation while exit
-set fileencodings=utf-8,gb18030,gbk,big5
+"replace end
 
-" Switch syntax highlighting on, when the terminal has colors
-" Also switch on highlighting the last used search pattern.
-if (&t_Co > 2 || has("gui_running")) && !exists("syntax_on")
-  syntax on
-endif
+"format begin
+"Plug 'Chiel92/vim-autoformat'
+"clang-format
+"https://clang.llvm.org/docs/ClangFormatStyleOptions.html
 
-if filereadable(expand("~/.vimrc.bundles"))
-  source ~/.vimrc.bundles
-endif
+"have your code be formatted upon saving your file
+"au BufWrite * :Autoformat
+map <F9> :Autoformat<CR>
 
-filetype plugin indent on
+"format end
 
-augroup vimrcEx
-  autocmd!
+"make polefs client
+nmap mp :!make client -j 16<CR>
+nmap mg :!compiledb -n make -j 16<CR>
 
-  " When editing a file, always jump to the last known cursor position.
-  " Don't do it for commit messages, when the position is invalid, or when
-  " inside an event handler (happens when dropping a file on gvim).
-  autocmd BufReadPost *
-    \ if &ft != 'gitcommit' && line("'\"") > 0 && line("'\"") <= line("$") |
-    \   exe "normal g`\"" |
-    \ endif
+" gtags wrapper for cscope, also workaround for teamviewer
+map mm <C-]>
+map ms <C-\>s
+map me <C-\>e
+map mc <C-\>c
+nmap <C-m> <C-\>
 
-  " Cucumber navigation commands
-  autocmd User Rails Rnavcommand step features/step_definitions -glob=**/* -suffix=_steps.rb
-  autocmd User Rails Rnavcommand config config -glob=**/* -suffix=.rb -default=routes
+" save current session
+map my :mksession! .session.vim<CR>
+nmap <C-y> :mksession! .session.vim<CR>
+map mh :split<CR>
+map mv :vsplit<CR>
 
-  " Set syntax highlighting for specific file types
-  autocmd BufRead,BufNewFile Appraisals set filetype=ruby
-  autocmd BufRead,BufNewFile *.md set filetype=markdown
+set t_Co=256
+set background=dark
+"set background=light
+"colorscheme solarized
+"colorscheme jellybeans
+colorscheme default
 
-  " Enable spellchecking for Markdown
-  autocmd FileType markdown setlocal spell
-
-  " Automatically wrap at 80 characters for Markdown
-  autocmd BufRead,BufNewFile *.md setlocal textwidth=180
-augroup END
-
-" Softtabs, 2 spaces
-set tabstop=8
+set tabstop=2
 set shiftwidth=2
-set shiftround
+set softtabstop=2
 set expandtab
 
-" Display extra whitespace
-set list listchars=tab:»·,trail:·
+" use space instead of tab, execute ':retab' in vim to convert tab to space
+"autocmd BufRead,BufNewFile *.c, *.h *.cc *.cpp *.hpp *.go *.py set expandtab
 
-" Use The Silver Searcher https://github.com/ggreer/the_silver_searcher
-if executable('ag')
-  " Use Ag over Grep
-  set grepprg=ag\ --nogroup\ --nocolor
+" highlight search result
+set hlsearch
+hi Search cterm=None ctermfg=Cyan ctermbg=DarkGray
+map mn :hi Search cterm=None ctermfg=Cyan ctermbg=DarkGray<CR>
+map nh :nohlsearch<CR>
 
-  " Use ag in CtrlP for listing files. Lightning fast and respects .gitignore
-  let g:ctrlp_user_command = 'ag %s -l --nocolor -g ""'
 
-  " ag is fast enough that CtrlP doesn't need to cache
-  let g:ctrlp_use_caching = 0
-endif
+" For YouCompleteMe
+set encoding=utf-8
 
-" Color scheme
-"colorscheme molokai
-highlight NonText guibg=#060606
-highlight Folded  guibg=#0A0A0A guifg=#9090D0
+" set mouse=a
+set nu
+"set rnu
+set nocsverb
+" no line number
+"map ma :set nornu<CR>:set nonu<CR>
+"nmap <C-a> :set nornu<CR>:set nonu<CR>
+" set line number
+"map mz :set nu<CR>:set rnu<CR>
+"nmap <C-e> :set nu<CR>:set rnu<CR>
 
-" Make it obvious where 80 characters is
-set textwidth=80
-set colorcolumn=+1
+set undolevels=500
 
-" Numbers
-set number
-set numberwidth=5
+"set csprg=gtags-cscope
+"cs add GTAGS
 
-" Tab completion
-" will insert tab at beginning of line,
-" will use completion if not at beginning
-set wildmode=list:longest,list:full
-function! InsertTabWrapper()
-    let col = col('.') - 1
-    if !col || getline('.')[col - 1] !~ '\k'
-        return "\<tab>"
-    else
-        return "\<c-p>"
-    endif
-endfunction
-inoremap <Tab> <c-r>=InsertTabWrapper()<cr>
-inoremap <S-Tab> <c-n>
+" Adjust window size
+nmap + <C-W>+
+nmap - <C-W>-
+nmap > <C-w>>
+nmap < <C-w><
 
-" Exclude Javascript files in :Rtags via rails.vim due to warnings when parsing
-let g:Tlist_Ctags_Cmd="ctags --exclude='*.js'"
+" Wrapped lines goes down/up to next row, rather than next line in file.
+nnoremap j gj
+nnoremap k gk
+map J <C-d>
+map K <C-u>
+map U <C-f>
+map I <C-b>
 
-" Index ctags from any project, including those outside Rails
-map <Leader>ct :!ctags -R .<CR>
+" Jump between windows
+map <C-j> <C-W>j
+map <C-k> <C-W>k
+map <C-h> <C-W>h
+map <C-l> <C-W>l
 
-" Switch between the last two files
-nnoremap <leader><leader> <c-^>
+" CtrlP, run 'Ctrl+D' in prompt to switch between filename and fullpath modes
+"map <C-b> :CtrlPBuffer<CR>
+"let g:ctrlp_by_filename = 3
+"let g:ctrlp_max_files = 0
+"set wildignore+=*.o,*.a
+"let g:ctrlp_custom_ignore = '\v[\/]\.(o|a)$'
+"let g:ctrlp_user_command = 'find %s -type f -name *.cc -o -name *.c -o -name *.h -o -name *.hpp -o -name *.go'
 
-" Get off my lawn
-nnoremap <Left> :echoe "Use h"<CR>
-nnoremap <Right> :echoe "Use l"<CR>
-nnoremap <Up> :echoe "Use k"<CR>
-nnoremap <Down> :echoe "Use j"<CR>
+" CtrlPFunky
+"map mf :CtrlPFunky<CR>
+"nmap <C-f> :CtrlPFunky<CR>
+"let g:ctrlp_extensions = ['funky']
+"let g:ctrlp_funky_syntax_highlight = 1
 
-" vim-rspec mappings
-nnoremap <Leader>t :call RunCurrentSpecFile()<CR>
-nnoremap <Leader>s :call RunNearestSpec()<CR>
-nnoremap <Leader>l :call RunLastSpec()<CR>
-
-" Run commands that require an interactive shell
-nnoremap <Leader>r :RunInInteractiveShell<space>
-
-" Treat <li> and <p> tags like the block tags they are
-let g:html_indent_tags = 'li\|p'
-
-" Open new split panes to right and bottom, which feels more natural
-set splitbelow
-set splitright
-
-" Quicker window movement
-nnoremap <C-j> <C-w>j
-nnoremap <C-k> <C-w>k
-nnoremap <C-h> <C-w>h
-nnoremap <C-l> <C-w>l
-
-" configure syntastic syntax checking to check on open as well as save
-let g:syntastic_check_on_open=1
-let g:syntastic_html_tidy_ignore_errors=[" proprietary attribute \"ng-"]
-
-autocmd Syntax javascript set syntax=jquery " JQuery syntax support
-
-set matchpairs+=<:>
-set statusline+=%{fugitive#statusline()} "  Git Hotness
-
-" Nerd Tree
-let NERDChristmasTree=0
-let NERDTreeWinSize=40
-let NERDTreeChDirMode=2
-let NERDTreeIgnore=['\~$', '\.pyc$', '\.swp$']
-let NERDTreeShowBookmarks=1
-let NERDTreeWinPos="left"
-autocmd vimenter * if !argc() | NERDTree | endif " Automatically open a NERDTree if no files where specified
-autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif " Close vim if the only window left open is a NERDTree
-nmap <F5> :NERDTreeToggle<cr>
+" Nerdtree
+map m2 :NERDTreeToggle<CR>
+nmap <F2> :NERDTreeToggle<CR>
 
 " Tagbar
-let g:tagbar_width=35
-let g:tagbar_autofocus=1
-nmap <F6> :TagbarToggle<CR>
+map m3 :TagbarToggle<CR>
+nmap <F3> :TagbarToggle<CR>
 
-" Emmet
-let g:user_emmet_mode='i' " enable for insert mode
+"vim-go
+"nmap md :GoDef<CR>
+"nmap mr :GoReferrers<CR>
 
-" Search results high light
-set hlsearch
+"fzf
+" Always enable preview window on the right with 60% width
+let g:fzf_preview_window = 'right:60%'
+map <C-p> :Files<CR>
+map <C-b> :Buffers<CR>
+nnoremap <F7> :Rgw<CR>
+nnoremap <F8> :Rg<CR>
 
-" nohlsearch shortcut
-nmap -hl :nohlsearch<cr>
-nmap +hl :set hlsearch<cr>
+" git-gutter
+map m4 :GitGutterToggle<CR>
+nmap <F4> :GitGutterToggle<CR>
+map m5 :GitGutterLineHighlightsToggle<CR>
+nmap <F5> :GitGutterLineHighlightsToggle<CR>
+map gn :GitGutterNextHunk<CR>
+map gp :GitGutterPrevHunk<CR>
+set updatetime=300
+"let g:gitgutter_signs = 0
 
-" Javascript syntax hightlight
+" airline
+"let g:airline_section_a       (mode, crypt, paste, spell, iminsert)
+"let g:airline_section_b       (hunks, branch)[*]
+"let g:airline_section_c       (bufferline or filename)
+"let g:airline_section_gutter  (readonly, csv)
+"let g:airline_section_x       (tagbar, filetype, virtualenv)
+"let g:airline_section_y       (fileencoding, fileformat)
+"let g:airline_section_z       (percentage, line number, column number)
+"let g:airline_section_error   (ycm_error_count, syntastic-err, eclim, languageclient_error_count)
+"let g:airline_section_warning (ycm_warning_count, syntastic-warn, languageclient_warning_count, whitespace)
+let g:airline_section_b = ''
+let g:airline_section_error = ''
+let g:airline_section_warning = ''
+
+" vim-airline-theme, themes are located in ~/.vim/plugged/vim-airline-themes/autoload/airline/themes
+let g:airline_theme='violet'
+
+" vim-gutentags
+let g:gutentags_project_root = ['.root', '.git']
+let g:gutentags_modules = ['gtags_cscope']
+let g:gutentags_cache_dir = expand('~/.cache/gtags')
+"let g:gutentags_auto_add_gtags_cscope = 0
+
+"vim-cpp-enhanced-highlight
+let g:cpp_member_variable_highlight = 1
+let g:cpp_posix_standard = 1
+let g:cpp_experimental_template_highlight = 1
+let g:cpp_concepts_highlight = 1
+let c_no_curly_error=1
+
+" vim-plug session begin
+call plug#begin('~/.vim/plugged')
+
+" My plugins
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+Plug 'junegunn/fzf.vim'
+"Plug 'kien/ctrlp.vim'
+"Plug 'tacahiroy/ctrlp-funky'
+Plug 'majutsushi/tagbar'
+Plug 'chazy/cscope_maps'
+Plug 'scrooloose/nerdtree'
+Plug 'terryma/vim-multiple-cursors'
+Plug 'Raimondi/delimitMate'
+Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
+Plug 'tpope/vim-fugitive'
+Plug 'airblade/vim-gitgutter'
+Plug 'ludovicchabant/vim-gutentags'
+"Plug 'prabirshrestha/asyncomplete.vim'
+Plug 'octol/vim-cpp-enhanced-highlight'
+Plug 'Chiel92/vim-autoformat'
+
+Plug 'neoclide/coc.nvim', {'branch': 'release'}
+Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
+Plug 'rust-lang/rust.vim'
+"Plug 'w0rp/ale'
+"Plug 'Valloric/YouCompleteMe'
+"Plug 'prabirshrestha/async.vim'
+"Plug 'prabirshrestha/vim-lsp'
+"Plug 'mattn/vim-lsp-settings'
+"Plug 'scrooloose/syntastic'
+"Plug 'AutoComplPop'
+"Plug 'will133/vim-dirdiff'
+
+"vim-plug session end
+call plug#end()
+
+"let g:ycm_global_ycm_extra_conf = '~/.vim/ycm_extra_conf.py'
+set ts=8
+set sw=2
+set smarttab
+source ~/.vim/.coc.vim
+
+"let g:gutentags_define_advanced_commands = 1
+"
+"rust
 syntax enable
-
-" YouCompleteMe
-let g:ycm_autoclose_preview_window_after_completion=1
-nnoremap <leader>g :YcmCompleter GoToDefinitionElseDeclaration<CR>
-
-" ctrlp
-set wildignore+=*/tmp/*,*.so,*.swp,*.zip     " MacOSX/Linux"
-let g:ctrlp_custom_ignore = '\v[\/]\.(git|hg|svn)$'
-
-set laststatus=2 " Always display the status line
-set statusline+=%{fugitive#statusline()} "  Git Hotness
-
-nnoremap <leader>w :w<CR>
-nnoremap <leader>q :q<CR>
-
-" RSpec.vim mappings
-map <Leader>t :call RunCurrentSpecFile()<CR>
-map <Leader>s :call RunNearestSpec()<CR>
-map <Leader>l :call RunLastSpec()<CR>
-map <Leader>a :call RunAllSpecs()<CR>
-
-" Vim-instant-markdown doesn't work in zsh
-set shell=bash\ -i
-
-" Snippets author
-let g:snips_author = 'Yuez'
-
-" Local config
-if filereadable($HOME . "/.vimrc.local")
-  source ~/.vimrc.local
-endif
-
-inoremap <C-o> <CR><Esc>O                                                        
-inoremap <C-l> <Esc>ls<Space>                                                                                                                                                                                    
-                                                                                     
-"跳过括号                                                                            
-"" Out of the brackets                                                               
-func SkipPair()                                                                      
-    if getline('.')[col('.') - 1] == ')' || getline('.')[col('.') - 1] == ']' || getline('.')[col('.') - 1] == '"' || getline('.')[col('.') - 1] == "'" || getline('.')[col('.') - 1] == '}' || getline('.')[col('.') - 1] == '>' 
-        return "\<ESC>la\<Space>"                                                    
-    else                                                                             
-        return "ll"·                                                                 
-    endif                                                                            
-  endfunc                                                                            
-                                                                                     
-inoremap ll <C-R>=SkipPair()<CR>  
+filetype plugin indent on
+"enable automatic running of :RustFmt when you save a buffer
+let g:rustfmt_autosave = 1 
