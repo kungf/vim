@@ -37,7 +37,7 @@ nnoremap <Leader>R :call Replace(0, input('Replace '.expand('<cword>').' with: '
 "
 ":set hidden Allow switching away from a changed buffer without saving.
 ":set autowriteall Or, use this for automatic saving (instead of :set hidden).
-set autowriteall
+"set autowriteall
 
 "format begin {{{
 "Plug 'Chiel92/vim-autoformat'
@@ -46,20 +46,17 @@ set autowriteall
 
 "have your code be formatted upon saving your file
 "au BufWrite * :Autoformat
-map <F9> :Autoformat<CR>
+"any help
+"map <F9> :Autoformat<CR>
+let g:autoformat_autoindent = 0
+let g:autoformat_retab = 0
+let g:autoformat_remove_trailing_spaces = 0
 
 "format end}}}
 
 "make polefs client
 nmap mp :!make client -j 16<CR>
 nmap mg :!compiledb -n make -j 16<CR>
-
-" gtags wrapper for cscope, also workaround for teamviewer
-map mm <C-]>
-map ms <C-\>s
-map me <C-\>e
-map mc <C-\>c
-nmap <C-m> <C-\>
 
 " save current session
 map my :mksession! .session.vim<CR>
@@ -72,12 +69,12 @@ set background=dark
 "set background=light
 "colorscheme solarized
 "colorscheme jellybeans
-colorscheme default
+"colorscheme default
 
-set tabstop=2
-set shiftwidth=2
-set softtabstop=2
-set expandtab
+"set tabstop=2
+set shiftwidth=8
+"set softtabstop=2
+"set expandtab
 
 " use space instead of tab, execute ':retab' in vim  convert tab  space
 "autocmd BufRead,BufNewFile *.c, *.h *.cc *.cpp *.hpp *.go *.py set expandtab
@@ -107,12 +104,6 @@ set undolevels=500
 
 "set csprg=gtags-cscope
 "cs add GTAGS
-
-" Adjust window size
-nmap + <C-W>+
-nmap - <C-W>-
-nmap > <C-w>>
-nmap < <C-w><
 
 " Wrapped lines goes down/up  next row, rather than next line in file.
 nnoremap j gj
@@ -151,11 +142,19 @@ map m3 :TagbarToggle<CR>
 nmap <F3> :TagbarToggle<CR>
 "calculate a dynamic value
 "to make the tagbar width relative to a percentage of the vim window size
-let g:tagbar_width = max([70, winwidth(0) / 5])
+let g:tagbar_width = min([70, winwidth(0) / 4])
 
-"vim-go
+"vim-go {{{
 "nmap md :GoDef<CR>
 "nmap mr :GoReferrers<CR>
+nnoremap <F4> :GoDeclsDir<CR>
+nnoremap <F5> :GoDecls<CR>
+nnoremap <Leader>f :GoFmt<CR>
+"default 1, auto fmt before save
+let go_fmt_autosave = 0
+"if 1, save are very slow
+let go_imports_autosave = 0
+"end vim-go"}}}
 
 "fzf
 " Always enable preview window on  right with 60% width
@@ -167,9 +166,7 @@ nnoremap <F7> :Rgw<CR>
 
 " git-gutter
 map m4 :GitGutterToggle<CR>
-nmap <F4> :GitGutterToggle<CR>
 map m5 :GitGutterLineHighlightsToggle<CR>
-nmap <F5> :GitGutterLineHighlightsToggle<CR>
 map gn :GitGutterNextHunk<CR>
 map gp :GitGutterPrevHunk<CR>
 set updatetime=300
@@ -193,10 +190,10 @@ let g:airline_section_warning = ''
 let g:airline_theme='violet'
 
 " vim-gutentags
-let g:gutentags_project_root = ['.root', '.git']
+let g:gutentags_project_root = ['.root', '.git','.tags']
+let g:gutentags_ctags_tagfile = '.tags'
 let g:gutentags_modules = ['gtags_cscope']
 let g:gutentags_cache_dir = expand('~/.cache/gtags')
-"let g:gutentags_auto_add_gtags_cscope = 0
 
 "vim-cpp-enhanced-highlight
 let g:cpp_member_variable_highlight = 1
@@ -230,7 +227,7 @@ Plug 'Chiel92/vim-autoformat'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
 Plug 'rust-lang/rust.vim'
-"Plug 'w0rp/ale'
+Plug 'w0rp/ale'
 "Plug 'Valloric/YouCompleteMe'
 "Plug 'prabirshrestha/async.vim'
 "Plug 'prabirshrestha/vim-lsp'
@@ -242,53 +239,30 @@ Plug 'rust-lang/rust.vim'
 "vim-plug session end
 call plug#end()
 
-"let g:ycm_global_ycm_extra_conf = '~/.vim/ycm_extra_conf.py'
-set ts=8
-set sw=2
-set smarttab
-"source ~/.vim/.coc.vim
-
-"let g:gutentags_define_advanced_commands = 1
-"
 "rust
-syntax enable
+"syntax on
 filetype plugin indent on
 "enable automatic running of :RustFmt when you save a buffer
 let g:rustfmt_autosave = 1 
-
-"fix ctags in mac: Unknown language go in language-force option
-let g:tagbar_type_go = {
-  \ 'ctagstype' : 'go',
-  \ 'kinds'     : [
-      \ 'p:package',
-      \ 'i:imports:1',
-      \ 'c:constants',
-      \ 'v:variables',
-      \ 't:types',
-      \ 'n:interfaces',
-      \ 'w:fields',
-      \ 'e:embedded',
-      \ 'm:methods',
-      \ 'r:constructor',
-      \ 'f:functions'
-    \ ],
-  \ 'sro' : '.',
-  \ 'kind2scope' : {
-      \ 't' : 'ctype',
-      \ 'n' : 'ntype'
-    \ },
-  \ 'scope2kind' : {
-      \ 'ctype' : 't',
-      \ 'ntype' : 'n'
-    \ },
-  \ 'ctagsbin'  : 'gotags',
-  \ 'ctagsargs' : '-sort -silent'
-  \ }
-
 
 "map
 "uppercase cur word
 nnoremap <Leader>u gUiw
 
 vnoremap <Leader>y "+y
+nnoremap <Leader>w :w<CR>
 onoremap p i(
+
+"turn off record
+map q <Nop>
+
+"ale begin {{{
+let g:ale_lint_on_text_changed = 0
+let g:ale_lint_on_enter = 0
+let g:ale_lint_on_insert_leave = 0
+let g:ale_lint_on_save = 1
+let g:ale_hover_to_preview = 1
+nnoremap <Leader>h :ALEHover<CR>
+nnoremap <Leader>l :ALELint<CR>
+nnoremap <Leader>s :ALEToggle<CR>
+"ale end }}}
